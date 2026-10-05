@@ -8,15 +8,23 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
 
+The first time I ran it, the game looked playable but behaved strangely. Right away
+I noticed the "Developer Debug Info" panel was exposed on the site, so any player
+could just open it and read the secret number. The hints were unreliable, pointing
+me in the wrong direction on some guesses. The "New Game" button didn't actually
+start a fresh game, and the "Show hint" checkbox came pre-checked instead of letting
+the player opt in.
+
 **Bug Reproduction Log**
 
 Document at least 3 bugs you found. Add rows as needed.
 
 | Input | Expected Behavior | Actual Behavior | Console Output / Error |
 |-------|-------------------|-----------------|------------------------|
-| | | | |
-| | | | |
-| | | | |
+| Open the app page | Secret number stays hidden from the player | "Developer Debug Info" panel is shown on the site, revealing the secret | None |
+| Guess a number (e.g. 9 vs secret 100) | Correct "Higher/Lower" hint | Hint points the wrong way on some guesses | None (silent wrong result) |
+| Click "New Game" | Resets attempts and draws a new secret to start over | Button does not start a working new game | None |
+| Load the page | "Show hint" is off until the player opts in | "Show hint" is already checked by default | None |
 
 ---
 
@@ -71,6 +79,16 @@ writing the test so its assertion fails on exactly the buggy input.
 
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
 
+Streamlit re-runs the entire script top to bottom every time you interact with the
+page, like clicking a button or typing in a box. That means any plain variable gets
+recreated from scratch on every click, which is why a secret number drawn with a
+fresh `random.randint` each run would never stay the same. Session state is the fix:
+`st.session_state` is a dictionary that survives those reruns, so values you store
+there (the secret, the attempt count, the score) persist between clicks. The pattern
+is to only set a value if it isn't already in session state, then read and update it
+on later runs. Once I understood that reruns reset everything by default, the
+"commitment issues" of the secret number made total sense.
+
 ---
 
 ## 5. Looking ahead: your developer habits
@@ -79,3 +97,13 @@ writing the test so its assertion fails on exactly the buggy input.
   - This could be a testing habit, a prompting strategy, or a way you used Git.
 - What is one thing you would do differently next time you work with AI on a coding task?
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+
+The habit I want to reuse is writing a regression test that fails on the exact
+buggy input before trusting a fix. Pinning the bug with `check_guess(9, 100)` gave
+me a concrete, repeatable way to prove the repair worked instead of just eyeballing
+the game. I also want to keep committing in small, well-described steps so the
+history explains what changed and why. Next time I would read the AI-generated code
+more critically up front rather than running it first, since the defensive
+`try/except` that stringified values was actually hiding the root cause. This
+project taught me that AI-generated code can look polished and still be quietly
+broken, so I treat it as a draft to verify and test, not a finished answer.
